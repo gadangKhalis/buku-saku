@@ -28,6 +28,7 @@ const handler = NextAuth({
           if (user) return user;
           return null;
         } catch (error) {
+          console.log(error);
           return null;
         }
       },

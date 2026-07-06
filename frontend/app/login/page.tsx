@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useRouter } from "next-navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function LoginPage() {
@@ -9,7 +9,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleCredentLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +71,7 @@ export default function LoginPage() {
       <p>or</p>
 
       {/* OAuth button */}
-      <button onClick={() => signIn(google, { callbackUrl: "/dashboard" })}>
+      <button onClick={() => signIn("google", { callbackUrl: "/dashboard" })}>
         Login with Google
       </button>
 
