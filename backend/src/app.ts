@@ -3,6 +3,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger";
 
 dotenv.config();
 
@@ -15,6 +17,14 @@ app.use(
   cors({
     origin: "http://localhost:3000",
     credentials: true,
+  }),
+);
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customSiteTitle: "BukuSaku API docs",
   }),
 );
 
