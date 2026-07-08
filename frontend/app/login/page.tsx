@@ -1,8 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,7 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleCredentLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -22,63 +26,70 @@ export default function LoginPage() {
       redirect: false,
     });
 
+    setLoading(false);
+
     if (result?.error) {
       setError("Email or password not valid");
-      setLoading(false);
       return;
     }
 
     router.push("/dashboard");
   };
   return (
-    <div>
-      <h1>BukuSaku</h1>
-      <h2>Login</h2>
+    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
+      {/* Left Column */}
+      <div className="flex items-center justify-center p-8">
+        <Card className="w-full max-w-sm border-none shadow-none">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">
+              Login to BukuSaku
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Manage your Expense Wisely
+            </p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="password">Password</label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Processing..." : "Login"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Error Message */}
-      {error && <p>{error}</p>}
-
-      {/* Form Credentials */}
-      <form onSubmit={handleCredentLogin}>
-        <div>
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="name@mail.com"
-            required
-          />
+      {/* Right Column */}
+      <div className="hidden lg:flex bg-primary items-center justify-center">
+        <div className="text-primary-foreground text-center px-8">
+          <h2 className="text-3xl font-bold mb-2">BukuSaku</h2>
+          <p className="text-primary-foreground/80">
+            Record, monitor, and control your expenses every day
+          </p>
         </div>
-        <div>
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="password"
-            required
-          />
-        </div>
-        <button type="submit" disabled={loading}>
-          {loading ? "loading..." : "Login"}
-        </button>
-      </form>
-
-      {/* Divider */}
-      <p>or</p>
-
-      {/* OAuth button */}
-      <button onClick={() => signIn("google", { callbackUrl: "/dashboard" })}>
-        Login with Google
-      </button>
-
-      {/* Link to register */}
-      <p>
-        Hav no account yet? <a href="/register">Resgister here</a>
-      </p>
+      </div>
     </div>
   );
 }
