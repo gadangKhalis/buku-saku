@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { register, login, logout } from "../controllers/auth.ctr";
 import { authMiddle } from "../middlewares/auth.middle";
+import { oauthSync } from "../controllers/auth.ctr";
 
 const router = Router();
 
@@ -85,5 +86,40 @@ router.post("/login", login);
  *         description: Unauthorized / token Invalid
  */
 router.post("/logout", authMiddle, logout);
+
+/**
+ * @swagger
+ * /api/auth/oauth-sync:
+ *   post:
+ *     summary: Sinkronisasi user dari OAuth provider (internal use only)
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: header
+ *         name: x-internal-secret
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               provider:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User ditemukan atau berhasil dibuat
+ *       401:
+ *         description: Internal secret tidak valid
+ */
+router.post("/oauth-sync", oauthSync);
 
 export default router;

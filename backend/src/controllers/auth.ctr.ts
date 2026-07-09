@@ -109,3 +109,46 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
   res.clearCookie("token");
   res.status(200).json({ message: "Logout Successfully" });
 };
+
+export const oauthSync = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const internalSecret = req.headers["x-internal-secret"];
+    if (internalSecret !== process.env.INTERNAL_API_SECRET) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+    const { email, name, provider } = req.body;
+    if (!email) {
+      res.status(400).json({ message: "Email is required" });
+      return;
+    }
+
+    let user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email,
+          name,
+          provider: provider || "google",
+          password: null,
+        },
+      });
+    }
+
+    res.status(200).json({
+      message: "OAuth sync successfull",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("OAuth sync error", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};

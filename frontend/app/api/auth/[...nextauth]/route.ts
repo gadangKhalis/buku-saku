@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
+import Email from "next-auth/providers/email";
 
 const handler = NextAuth({
   providers: [
@@ -40,6 +41,35 @@ const handler = NextAuth({
   },
 
   callbacks: {
+    // Running every successfull login
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        try {
+          const res = await axios.post(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/oauth-sync`,
+            {
+              email: user.email,
+              name: user.name,
+              provider: "google",
+            },
+            {
+              headers: {
+                "x-internal-secret": process.env.INTERNAL_API_SECRET,
+              },
+            },
+          );
+
+          const dbUser = res.data.user;
+          user.id = dbUser.id;
+          (user as any).role = dbUser.role;
+        } catch (error) {
+          console.error("OAuth sync failed:", error);
+          return false; // sync failed
+        }
+      }
+      return true;
+    },
+
     // running when token created for first time
     async jwt({ token, user }) {
       if (user) {

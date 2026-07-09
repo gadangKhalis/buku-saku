@@ -19,7 +19,7 @@ model User {
   name      String?
   image     String?
   role      Role    @default(MEMBER)
-  provider  String?
+  provider  String  @default("credentials")
   createdAt   DateTime  @default(now())
   transaction   Transaction[]
   categories  Category[]
