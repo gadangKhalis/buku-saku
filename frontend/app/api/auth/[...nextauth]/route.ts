@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
-import Email from "next-auth/providers/email";
+import jwt from "jsonwebtoken";
 
 const handler = NextAuth({
   providers: [
@@ -76,6 +76,16 @@ const handler = NextAuth({
         // add custom data to token for first time
         token.id = user.id;
         token.role = (user as any).role;
+
+        token.backendToken = jwt.sign(
+          {
+            id: user.id,
+            email: user.email,
+            role: (user as any).role,
+          },
+          process.env.NEXTAUTH_SECRET as string,
+          { expiresIn: "7d" },
+        );
       }
       return token;
     },
@@ -83,6 +93,7 @@ const handler = NextAuth({
       if (token) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        (session as any).backendToken = token.backendToken;
       }
       return session;
     },

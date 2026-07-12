@@ -22,6 +22,11 @@ const options: swaggerJsdoc.Options = {
           in: "cookie",
           name: "token",
         },
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
       },
     },
   },

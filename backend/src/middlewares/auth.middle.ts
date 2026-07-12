@@ -8,14 +8,19 @@ export const authMiddle = (
   next: NextFunction,
 ): void => {
   try {
-    const token = req.cookies?.token;
-    if (!token) {
-      res.status(400).json({ message: "Unauthorized: token tidak ditemukan" });
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      res.status(401).json({ message: "Unauthorized: token tidak ditemukan" });
       return;
     }
 
-    // Token Verify,
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
+    const token = authHeader.split(" ")[1];
+
+    const decoded = jwt.verify(
+      token,
+      process.env.NEXTAUTH_SECRET as string,
+    ) as {
       id: string;
       email: string;
       role: string;
