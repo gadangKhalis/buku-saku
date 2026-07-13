@@ -8,10 +8,10 @@ export const createCategorySchema = z.object({
     .min(1, "Category name must be filled")
     .max(25, "Category name max 25 character"),
   icon: z.enum(ALLOWED_ICONS, {
-    error: "Icon did not valid, choose from avaliable presets",
+    error: "Icon is not valid, choose from avaliable presets",
   }),
   color: z.enum(ALLOWED_COLORS, {
-    error: "Color did not valid, choose from avaliable colors",
+    error: "Color is not valid, choose from avaliable colors",
   }),
 });
 
