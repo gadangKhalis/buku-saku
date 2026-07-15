@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.routes";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 import categoryRoutes from "./routes/categoryRoutes";
+import currencyRoutes from "./routes/currencyRoutes";
 
 dotenv.config();
 
@@ -32,6 +33,8 @@ app.use(
 app.use("/api/auth", authRoutes);
 
 app.use("/api/categories", categoryRoutes);
+
+app.use("/api/currency", currencyRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "BukuSaku API ✅" });
