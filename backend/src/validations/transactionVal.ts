@@ -1,3 +1,4 @@
+import { get } from "node:http";
 import { z } from "zod";
 
 export const createTransactionSchema = z.object({
@@ -19,4 +20,12 @@ export const createTransactionSchema = z.object({
   }),
 });
 
+export const getTransactionQuerySchema = z.object({
+  categoryId: z.string().optional(),
+  type: z.enum(["INCOME", "EXPENSE"]).optional(),
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
+});
+
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
+export type GetTransactionQuery = z.infer<typeof getTransactionQuerySchema>;
