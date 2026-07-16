@@ -30,10 +30,17 @@ A fullstack personal finance tracking application with multi-currency support (I
 - ✅ Full API documentation via Swagger (`/api-docs`)
 - ✅ Split-screen Login/Register UI
 
+### Completed (Week 2)
+
+- ✅ Category CRUD with preset icon (lucide-react) & color system
+- ✅ Currency Service — daily exchange rate caching (USD → IDR)
+- ✅ Transaction CRUD with multi-currency support (IDR/USD)
+- ✅ Automatic `amountInIDR` recalculation on currency/amount update
+- ✅ Transaction filtering by category, type, and date range
+- ✅ Ownership checks across all Category & Transaction operations
+
 ### In Progress
 
-- ⬜ Category & Transaction CRUD
-- ⬜ Multi-currency support (IDR/USD) with automatic exchange rates
 - ⬜ Budget alerts & notifications
 - ⬜ Dashboard with data visualization (Recharts)
 - ⬜ Split bill between users
