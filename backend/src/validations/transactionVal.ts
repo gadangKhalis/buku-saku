@@ -27,5 +27,8 @@ export const getTransactionQuerySchema = z.object({
   endDate: z.coerce.date().optional(),
 });
 
+export const updateTransactionSchema = createTransactionSchema.partial();
+
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
 export type GetTransactionQuery = z.infer<typeof getTransactionQuerySchema>;
+export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>;
