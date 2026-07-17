@@ -3,11 +3,13 @@ import { AuthRequest } from "../types";
 import prisma from "../lib/prisma";
 import {
   createTransactionSchema,
+  getSummaryQuerySchema,
   getTransactionQuerySchema,
   updateTransactionSchema,
 } from "../validations/transactionVal";
 import { getTodayUsdToIdrRate } from "../services/currencyService";
 import { getExchangeRate } from "./currencyController";
+import { date, lte } from "zod";
 
 export const createTransaction = async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
@@ -79,7 +81,38 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
       errors: parseResult.error.flatten().fieldErrors,
     });
   }
-  const { categoryId, type, startDate, endDate } = parseResult.data;
+  const {
+    categoryId,
+    type,
+    startDate,
+    endDate,
+    month,
+    search,
+    sort,
+    minAmount,
+    maxAmount,
+  } = parseResult.data;
+
+  let dateFilter: { gte?: Date; lte?: Date } | undefined;
+
+  if (month) {
+    const [year, monthNum] = month.split("-").map(Number);
+    const firstDay = new Date(year, monthNum - 1, 1);
+    const lastDay = new Date(year, monthNum, 0, 23, 59, 59, 999);
+    dateFilter = { gte: firstDay, lte: lastDay };
+  } else if (startDate || endDate) {
+    dateFilter = {
+      ...(startDate && { gte: startDate }),
+      ...(endDate && { lte: endDate }),
+    };
+  }
+
+  const orderByMap = {
+    date_asc: { date: "asc" as const },
+    date_desc: { date: "desc" as const },
+    amount_asc: { amountInIDR: "asc" as const },
+    amount_desc: { amountInIDR: "desc" as const },
+  };
 
   try {
     const transaction = await prisma.transaction.findMany({
@@ -87,14 +120,16 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
         userId,
         ...(categoryId && { categoryId }),
         ...(type && { type }),
-        ...(startDate || endDate
-          ? {
-              date: {
-                ...(startDate && { gte: startDate }),
-                ...(endDate && { lte: endDate }),
-              },
-            }
-          : {}),
+        ...(dateFilter && { date: dateFilter }),
+        ...(search && {
+          description: { contains: search, mode: "insensitive" },
+        }),
+        ...((minAmount || maxAmount) && {
+          amountInIDR: {
+            ...(minAmount && { gte: minAmount }),
+            ...(maxAmount && { lte: maxAmount }),
+          },
+        }),
       },
 
       orderBy: { date: "desc" },
@@ -105,8 +140,8 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
       data: transaction,
     });
   } catch (error) {
-    console.error("Get transactions error:".error);
-    return res.status(500).json({ message: "Terjadi kesalahan pada server" });
+    console.error("Get transactions error:", error);
+    return res.status(500).json({ message: "Terjadi kesalahan  server" });
   }
 };
 
@@ -155,7 +190,7 @@ export const updateTransaction = async (req: AuthRequest, res: Response) => {
     }
 
     if (input.categoryId) {
-      const category = await prisma.transaction.findFirst({
+      const category = await prisma.category.findFirst({
         where: { id: input.categoryId, userId },
       });
       if (!category) {
@@ -178,7 +213,7 @@ export const updateTransaction = async (req: AuthRequest, res: Response) => {
         amountInIDR = newAmount * exchangeRate;
       } else {
         exchangeRate = 1;
-        amountInIDR: newAmount;
+        amountInIDR = newAmount;
       }
     }
 
@@ -194,7 +229,7 @@ export const updateTransaction = async (req: AuthRequest, res: Response) => {
       .status(200)
       .json({ message: "Transaction updated successfully", data: updated });
   } catch (error) {
-    console.error("Update transaction error:".error);
+    console.error("Update transaction error:", error);
     return res.status(500).json({ message: "Server Internal Error" });
   }
 };
@@ -218,6 +253,72 @@ export const deleteTransaction = async (req: AuthRequest, res: Response) => {
       .json({ message: "Transaction deleted successfully" });
   } catch (error) {
     console.error("Delete transaction error:", error);
+    return res.status(500).json({ message: "Terjadi kesalahan server" });
+  }
+};
+
+export const getTransactionSummary = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  const userId = req.user!.id;
+
+  const parseResult = getSummaryQuerySchema.safeParse(req.query);
+  if (!parseResult.success) {
+    return res.status(400).json({
+      message: "Invalid query parameters",
+      errors: parseResult.error.flatten().fieldErrors,
+    });
+  }
+
+  const { month } = parseResult.data;
+
+  // choose month range, from query or month ongoing
+  const now = new Date();
+  const targetMonth = month
+    ? month.split("-").map(Number)
+    : [now.getFullYear(), now.getMonth() + 1];
+
+  const [year, monthNum] = targetMonth;
+  const firstDay = new Date(year, monthNum - 1, 1);
+  const lastDay = new Date(year, monthNum, 0, 23, 59, 59, 999);
+
+  try {
+    const [incomeResult, expenseResult] = await Promise.all([
+      prisma.transaction.aggregate({
+        where: {
+          userId,
+          type: "INCOME",
+          date: { gte: firstDay, lte: lastDay },
+        },
+        _sum: { amountInIDR: true },
+      }),
+
+      prisma.transaction.aggregate({
+        where: {
+          userId,
+          type: "EXPENSE",
+          date: { gte: firstDay, lte: lastDay },
+        },
+        _sum: { amountInIDR: true },
+      }),
+    ]);
+
+    const totalIncome = incomeResult._sum?.amountInIDR ?? 0;
+    const totalExpense = expenseResult._sum?.amountInIDR ?? 0;
+    const balance = totalIncome - totalExpense;
+
+    return res.status(200).json({
+      message: "Summary fetched successfully",
+      data: {
+        month: `${year}-${String(monthNum).padStart(2, "0")}`,
+        totalIncome,
+        totalExpense,
+        balance,
+      },
+    });
+  } catch (error) {
+    console.error("Get transaction SUmmary error:", error);
     return res.status(500).json({ message: "Terjadi kesalahan server" });
   }
 };

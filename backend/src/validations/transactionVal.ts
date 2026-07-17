@@ -25,6 +25,23 @@ export const getTransactionQuerySchema = z.object({
   type: z.enum(["INCOME", "EXPENSE"]).optional(),
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
+  month: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Month must be in YYYY-MM format")
+    .optional(),
+  search: z.string().trim().optional(),
+  sort: z
+    .enum(["date_asc", "date_desc", "amount_asc", "amount_desc"])
+    .optional()
+    .default("date_desc"),
+  minAmount: z.coerce.number().positive().optional(),
+  maxAmount: z.coerce.number().positive().optional(),
+});
+export const getSummaryQuerySchema = z.object({
+  month: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Month must be in YYYY-MM format")
+    .optional(),
 });
 
 export const updateTransactionSchema = createTransactionSchema.partial();
@@ -32,3 +49,4 @@ export const updateTransactionSchema = createTransactionSchema.partial();
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
 export type GetTransactionQuery = z.infer<typeof getTransactionQuerySchema>;
 export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>;
+export type GetSummaryQuery = z.infer<typeof getSummaryQuerySchema>;

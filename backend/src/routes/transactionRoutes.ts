@@ -6,6 +6,7 @@ import {
   getTransactionById,
   updateTransaction,
   deleteTransaction,
+  getTransactionSummary,
 } from "../controllers/transactionController";
 
 const router = Router();
@@ -97,6 +98,8 @@ router.post("/", authMiddle, createTransaction);
  *         description: Invalid query parameters
  */
 router.get("/", authMiddle, getTransactions);
+
+router.get("/summary", authMiddle, getTransactionSummary);
 
 /**
  * @swagger
