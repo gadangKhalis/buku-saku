@@ -10,6 +10,7 @@ import {
 import { getTodayUsdToIdrRate } from "../services/currencyService";
 import { getExchangeRate } from "./currencyController";
 import { date, lte } from "zod";
+import { createAuditLog } from "../services/auditLog";
 
 export const createTransaction = async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
@@ -60,6 +61,15 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
         date,
       },
     });
+
+    await createAuditLog(
+      userId,
+      "CREATE",
+      "Transaction",
+      transaction.id,
+      null,
+      transaction,
+    );
 
     return res.status(201).json({
       message: "Transaction created successfully",
@@ -225,6 +235,14 @@ export const updateTransaction = async (req: AuthRequest, res: Response) => {
         exchangeRate,
       },
     });
+    await createAuditLog(
+      userId,
+      "UPDATE",
+      "Transaction",
+      id,
+      existing,
+      updated,
+    );
     return res
       .status(200)
       .json({ message: "Transaction updated successfully", data: updated });
@@ -247,6 +265,7 @@ export const deleteTransaction = async (req: AuthRequest, res: Response) => {
     }
 
     await prisma.transaction.delete({ where: { id } });
+    await createAuditLog(userId, "DELETE", "Transaction", id, existing, null);
 
     return res
       .status(200)
