@@ -155,4 +155,16 @@ export default function TransactionsPage() {
     formData.currency === "USD" && usdRate && Number(formData.amount) > 0
       ? Number(formData.amount) * usdRate
       : null;
+
+  return (
+    <div className="max-w-2xl mx-auto p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold">Transaction</h1>
+        <Button onClick={openCreateForm} disabled={categories.length === 0}>
+          <Plus className="w-4 h-4 mr-2" />
+          Add Transaction
+        </Button>
+      </div>
+    </div>
+  );
 }
