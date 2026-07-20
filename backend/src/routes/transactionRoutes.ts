@@ -67,7 +67,7 @@ router.post("/", authMiddle, createTransaction);
  * @swagger
  * /api/transactions:
  *   get:
- *     summary: Get all transactions owned by the logged-in user, with optional filters
+ *     summary: Get all transactions owned by the logged-in user, with optional filters, search, sort, and pagination
  *     tags: [Transaction]
  *     security:
  *       - bearerAuth: []
@@ -91,12 +91,49 @@ router.post("/", authMiddle, createTransaction);
  *         schema:
  *           type: string
  *           format: date
+ *       - in: query
+ *         name: month
+ *         schema:
+ *           type: string
+ *           example: "2026-07"
+ *         description: Shortcut filter for a full month (format YYYY-MM). Takes priority over startDate/endDate if both are provided.
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Case-insensitive search on transaction description
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [date_asc, date_desc, amount_asc, amount_desc]
+ *           default: date_desc
+ *       - in: query
+ *         name: minAmount
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: maxAmount
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *           maximum: 100
  *     responses:
  *       200:
- *         description: Transactions fetched successfully
+ *         description: Transactions fetched successfully, includes pagination metadata
  *       400:
  *         description: Invalid query parameters
  */
+
 router.get("/", authMiddle, getTransactions);
 
 router.get("/summary", authMiddle, getTransactionSummary);
