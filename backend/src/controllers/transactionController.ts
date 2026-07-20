@@ -8,8 +8,6 @@ import {
   updateTransactionSchema,
 } from "../validations/transactionVal";
 import { getTodayUsdToIdrRate } from "../services/currencyService";
-import { getExchangeRate } from "./currencyController";
-import { date, lte } from "zod";
 import { createAuditLog } from "../services/auditLog";
 
 export const createTransaction = async (req: AuthRequest, res: Response) => {
@@ -60,6 +58,7 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
         description,
         date,
       },
+      include: { category: true },
     });
 
     await createAuditLog(
@@ -142,7 +141,7 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
         }),
       },
 
-      orderBy: { date: "desc" },
+      orderBy: orderByMap[sort],
       include: { category: true },
     });
     return res.status(200).json({
@@ -234,6 +233,7 @@ export const updateTransaction = async (req: AuthRequest, res: Response) => {
         amountInIDR,
         exchangeRate,
       },
+      include: { category: true },
     });
     await createAuditLog(
       userId,

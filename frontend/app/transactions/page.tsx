@@ -17,7 +17,7 @@ const EMPTY_FORM: TransactionFormData = {
 };
 
 function formatRupiah(value: number): string {
-  return new Int1.NumberFormat("id-ID", {
+  return new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
     minimumFractionDigits: 0,
@@ -86,7 +86,7 @@ export default function TransactionsPage() {
       amount: String(transaction.amount),
       currency: transaction.currency,
       type: transaction.type,
-      description: transaction.desciption ?? "",
+      description: transaction.description ?? "",
       date: transaction.date.split("T")[0],
     });
     setFormError(null);
@@ -116,12 +116,12 @@ export default function TransactionsPage() {
       currency: formData.currency,
       type: formData.type,
       description: formData.description || undefined,
-      data: formData.date,
+      date: formData.date,
     };
 
     try {
       if (editingId) {
-        const res = await api.put(`/transactions/${editingIdId}`, payload);
+        const res = await api.put(`/transactions/${editingId}`, payload);
         setTransactions((prev) =>
           prev.map((t) => (t.id === editingId ? res.data.data : t)),
         );
@@ -165,6 +165,233 @@ export default function TransactionsPage() {
           Add Transaction
         </Button>
       </div>
+
+      {!isLoading && categories.length === 0 && (
+        <p className="text-sm text-muted-foreground mb-4">
+          You havent category yet. Make categories first in page {""}
+          <a href="/categories" className="underline">
+            Category
+          </a>
+          .
+        </p>
+      )}
+
+      {/* FORM: CREATE / EDIT */}
+      {isFormOpen && (
+        <form
+          onSubmit={handleSubmit}
+          className="border rounded-lg p-4 mb-6 space-y-4"
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="font-medium">
+              {editingId ? "Edit Transaction" : "New Transaction"}
+            </h2>
+            <button type="button" onClick={closeForm}>
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-1 block">Category</label>
+            <select
+              value={formData.categoryId}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, categoryId: e.target.value }))
+              }
+              className="w-full border rounded-md p-2"
+              required
+            >
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="text-sm font-medium mb-1 block">Total</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.amount}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, amount: e.target.value }))
+                }
+                className="w-full border rounded-md p-2"
+                placeholder="0"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Currency</label>
+              <select
+                value={formData.currency}
+                onChange={(e) =>
+                  handleCurrencyChange(e.target.value as "USD" | "IDR")
+                }
+              >
+                <option value={"IDR"}>IDR</option>
+                <option value={"USD"}>USD</option>
+              </select>
+            </div>
+          </div>
+          {previewAmountInIDR !== null && (
+            <p className="text-sm text-muted-foreground">
+              = {formatRupiah(previewAmountInIDR)}
+            </p>
+          )}
+
+          <div>
+            <label className="text-sm font-medium mb-1 block">Type</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData((prev) => ({ ...prev, type: "EXPENSE" }))
+                }
+                className={`flex-1 border rounded-md p-2 ${formData.type === "EXPENSE" ? "border-destructive bg-destructive/10" : "border-input"}`}
+              >
+                Expense
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData((prev) => ({ ...prev, type: "INCOME" }))
+                }
+                className={`flex-1 border rounded-md p-2 ${
+                  formData.type === "INCOME"
+                    ? "border-green-600 bg-green-50"
+                    : "border-input"
+                }`}
+              >
+                Pemasukan
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-1 block">Date</label>
+            <input
+              type="date"
+              value={formData.date}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, date: e.target.value }))
+              }
+              className="w-full border rounded-md p-2"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-1 block">
+              Description (optional)
+            </label>
+            <input
+              type="text"
+              value={formData.description}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+              className="w-full border rounded-md p-2"
+              placeholder="Example: Lunch"
+              maxLength={200}
+            />
+          </div>
+
+          {formError && <p className="text-sm text-destructive">{formError}</p>}
+
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? "Saving" : "Save"}
+          </Button>
+        </form>
+      )}
+
+      {/* List States */}
+      {isLoading && (
+        <p className="text-muted-foreground text-sm">
+          Loading Transactions ....
+        </p>
+      )}
+
+      {!isLoading && error && (
+        <p className="text-sm text-destructive">{error}</p>
+      )}
+
+      {!isLoading && !error && transactions.length === 0 && (
+        <p className="text-muted-foreground text-sm">
+          No transaction yet. Click add Transaction above to create ones
+        </p>
+      )}
+
+      {!isLoading && !error && transactions.length > 0 && (
+        <ul>
+          {transactions.map((transaction) => (
+            <li
+              key={transaction.id}
+              className="flex items-center justify-between border rounded-md p-3"
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  style={{ backgroundColor: transaction.category.color }}
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs"
+                >
+                  {transaction.category.name.charAt(0)}
+                </div>
+                <div>
+                  <p className="font-medium">
+                    {transaction.description || transaction.category.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {transaction.category.name} ·{" "}
+                    {new Date(transaction.date).toLocaleDateString("id-ID")}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <span
+                  className={`font-medium text-sm ${transaction.type === "INCOME" ? "text-green-600" : "test-destructive"}`}
+                >
+                  {transaction.type === "INCOME" ? "+" : "-"}{" "}
+                  {formatRupiah(transaction.amountInIDR)}
+                </span>
+                <button onClick={() => openEditForm(transaction)}>
+                  <Pencil className="w-4 h-4 text-muted-foreground" />
+                </button>
+                <button onClick={() => setDeleteTargetId(transaction.id)}>
+                  <Trash2 className="w-4 h-4 text-destructive" />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Confirm Delete */}
+      {deleteTargetId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+          <div className="bg-background rounded-lg p-6 max-w-sm w-full space-y-4">
+            <p>Are you sure to delete this transaction?</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setDeleteTargetId(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => handleDelete(deleteTargetId)}
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
