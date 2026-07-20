@@ -36,6 +36,8 @@ export const getTransactionQuerySchema = z.object({
     .default("date_desc"),
   minAmount: z.coerce.number().positive().optional(),
   maxAmount: z.coerce.number().positive().optional(),
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(100).optional().default(10),
 });
 export const getSummaryQuerySchema = z.object({
   month: z

@@ -100,6 +100,8 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
     sort,
     minAmount,
     maxAmount,
+    page,
+    limit,
   } = parseResult.data;
 
   let dateFilter: { gte?: Date; lte?: Date } | undefined;
@@ -123,34 +125,47 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
     amount_desc: { amountInIDR: "desc" as const },
   };
 
-  try {
-    const transaction = await prisma.transaction.findMany({
-      where: {
-        userId,
-        ...(categoryId && { categoryId }),
-        ...(type && { type }),
-        ...(dateFilter && { date: dateFilter }),
-        ...(search && {
-          description: { contains: search, mode: "insensitive" },
-        }),
-        ...((minAmount || maxAmount) && {
-          amountInIDR: {
-            ...(minAmount && { gte: minAmount }),
-            ...(maxAmount && { lte: maxAmount }),
-          },
-        }),
+  const whereClause = {
+    userId,
+    ...(categoryId && { categoryId }),
+    ...(type && { type }),
+    ...(dateFilter && { date: dateFilter }),
+    ...(search && {
+      description: { contains: search, mode: "insensitive" as const },
+    }),
+    ...((minAmount || maxAmount) && {
+      amountInIDR: {
+        ...(minAmount && { gte: minAmount }),
+        ...(maxAmount && { lte: maxAmount }),
       },
+    }),
+  };
 
-      orderBy: orderByMap[sort],
-      include: { category: true },
-    });
+  try {
+    const [transactions, totalCount] = await Promise.all([
+      prisma.transaction.findMany({
+        where: whereClause,
+        orderBy: orderByMap[sort],
+        include: { category: true },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.transaction.count({ where: whereClause }),
+    ]);
+
     return res.status(200).json({
       message: "Transactions fetched successfully",
-      data: transaction,
+      data: transactions,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+      },
     });
   } catch (error) {
     console.error("Get transactions error:", error);
-    return res.status(500).json({ message: "Terjadi kesalahan  server" });
+    return res.status(500).json({ message: "Terjadi kesalahan server" });
   }
 };
 
