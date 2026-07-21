@@ -29,6 +29,7 @@ import {
   CategoryColor,
 } from "@/lib/constants/categoryPresets";
 import { Category, CategoryFormData } from "@/lib/types/category";
+import { toast } from "sonner";
 
 const ICON_MAP: Record<CategoryIcon, React.ElementType> = {
   utensils: Utensils,
@@ -115,15 +116,18 @@ export default function CategoriesPage() {
         setCategories((prev) =>
           prev.map((c) => (c.id === editingId ? res.data.data : c)),
         );
+        toast.success("Category updated successfully");
       } else {
         const res = await api.post("/categories", formData);
         setCategories((prev) => [...prev, res.data.data]);
+        toast.success("Category successfully added");
       }
       closeForm();
     } catch (err: any) {
       const message =
         err.response?.data?.message || "Saving Category failed. Try again.";
       setFormError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -134,9 +138,10 @@ export default function CategoriesPage() {
       await api.delete(`/categories/${id}`);
       setCategories((prev) => prev.filter((c) => c.id !== id));
       setDeleteTargetId(null);
+      toast.success("Category deleted successfully");
     } catch (err: any) {
       const message = err.response?.data?.message || "Delete category failed.";
-      alert(message);
+      toast.error(message);
       setDeleteTargetId(null);
     }
   }

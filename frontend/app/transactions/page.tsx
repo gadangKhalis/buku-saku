@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2, Pencil, Plus, X } from "lucide-react";
 import { Category } from "@/lib/types/category";
 import { Transaction, TransactionFormData } from "@/lib/types/transaction";
+import { toast } from "sonner";
 
 const EMPTY_FORM: TransactionFormData = {
   categoryId: "",
@@ -125,15 +126,18 @@ export default function TransactionsPage() {
         setTransactions((prev) =>
           prev.map((t) => (t.id === editingId ? res.data.data : t)),
         );
+        toast.success("Transaction updated successfully");
       } else {
         const res = await api.post("/transactions", payload);
         setTransactions((prev) => [res.data.data, ...prev]);
+        toast.success("Transaction added successfully");
       }
       closeForm();
     } catch (err: any) {
       const message =
         err.response?.data?.message || "Saving transaction failed. Try Again";
       setFormError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -143,10 +147,11 @@ export default function TransactionsPage() {
       await api.delete(`/transactions/${id}`);
       setTransactions((prev) => prev.filter((t) => t.id !== id));
       setDeleteTargetId(null);
+      toast.success("Trasaction deleted");
     } catch (err: any) {
       const message =
         err.response?.data?.message || "Delete transaction failed";
-      alert(message);
+      toast.error(message);
       setDeleteTargetId(null);
     }
   }
