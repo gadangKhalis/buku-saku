@@ -38,7 +38,7 @@ model Category {
   userId    String
   user      User @relation(fields:[userId], references:[id])
   transactions Transaction[]
-  budget    Budget?
+  budgets Budget[]
 
   @@unique([userId, name])
 }
@@ -93,12 +93,19 @@ model SplitBillItem {
 }
 
 model Budget {
-  id        String  @id @default(cuid())
-  userId    String
-  categoryId  String  @unique
-  limitIDR    Float
-  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  userId     String
+  categoryId String
+  limitIDR   Decimal  @db.Decimal(15, 2)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, categoryId]) // 1 budget aktif per kategori per user
+  @@map("budgets")
 }
 
 model Workspace {

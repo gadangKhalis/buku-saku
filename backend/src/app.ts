@@ -8,6 +8,7 @@ import { swaggerSpec } from "./config/swagger";
 import categoryRoutes from "./routes/categoryRoutes";
 import currencyRoutes from "./routes/currencyRoutes";
 import transactionRoutes from "./routes/transactionRoutes";
+import budgetRoutes from "./routes/budgetRoutes";
 
 dotenv.config();
 
@@ -38,6 +39,8 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/currency", currencyRoutes);
 
 app.use("/api/transactions", transactionRoutes);
+
+app.use("/api/budgets", budgetRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "BukuSaku API ✅" });
