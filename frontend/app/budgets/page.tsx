@@ -2,19 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import api from "@/lib/api";
-import budgetCard from "@/components/BudgetCard";
-import BudgetFormModal from "@/components/BudgetFormModal";
+import api from "../../lib/api";
+import BudgetCard from "../../components/BudgetCard";
+import BudgetFormModal from "../../components/BudgetFormModal";
 
 interface Budget {
   id: string;
   categoryId: string;
-  limitIDR: string;
-  totalSpent: string;
-  usageSpent: string;
+  limitIDR: number;
+  totalSpent: number;
+  usagePercent: number;
   remaining: number;
   isWarning: boolean;
-  isExceed: boolean;
+  isExceeded: boolean;
   category: {
     id: string;
     name: string;
@@ -59,6 +59,11 @@ export default function BudgetsPage() {
     }
   };
 
+  const openEditModal = (budget: Budget) => {
+    setEditingBudget(budget);
+    setModalOpen(true);
+  };
+
   const openCreateModal = () => {
     setEditingBudget(null);
     setModalOpen(true);
@@ -78,7 +83,7 @@ export default function BudgetsPage() {
         <h1 className="text-2xl font-bold">Budget</h1>
         <button
           onClick={openCreateModal}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover: bg-blue-700"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
         >
           + Set Budget
         </button>
@@ -87,7 +92,7 @@ export default function BudgetsPage() {
       {budgets.length === 0 ? (
         <p>No budget set yet</p>
       ) : (
-        <div className="grid grid-cols-1 mg:grid-cols-2 lg: grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {" "}
           {budgets.map((budget) => (
             <BudgetCard
@@ -102,9 +107,9 @@ export default function BudgetsPage() {
 
       {modalOpen && (
         <BudgetFormModal
-          busget={editingBudget}
+          budget={editingBudget}
           onClose={() => setModalOpen(false)}
-          onSucces={() => {
+          onSuccess={() => {
             setModalOpen(false);
             fetchBudgets();
           }}
