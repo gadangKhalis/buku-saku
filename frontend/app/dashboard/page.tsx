@@ -5,6 +5,8 @@ import LogoutBtn from "@/components/LogoutBtn";
 import DashboardSummaryCard from "@/components/DashboardSummaryCards";
 import RecentTransactions from "@/components/RecentTransactions";
 import BudgetOverview from "@/components/BudgetOverview";
+import BarChartMonthly from "@/components/BarChartMonthly";
+import PieChartCategory from "@/components/PieChartCategory";
 
 async function getDashboardData(token: string) {
   const baseURL = process.env.NEXT_PUBLIC_API_URL;
@@ -12,7 +14,7 @@ async function getDashboardData(token: string) {
 
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  const [summaryRes, transactionsRes, budgetRes] = await Promise.all([
+  const [summaryRes, transactionsRes, budgetRes, chartRes] = await Promise.all([
     fetch(`${baseURL}/api/transactions/summary?month=${currentMonth}`, {
       headers,
       cache: "no-store",
@@ -25,18 +27,25 @@ async function getDashboardData(token: string) {
       headers,
       cache: "no-store",
     }),
+    fetch(`${baseURL}/api/reports/chart-data`, {
+      headers,
+      cache: "no-store",
+    }),
   ]);
 
-  const [summary, transactions, budgets] = await Promise.all([
+  const [summary, transactions, budgets, chartData] = await Promise.all([
     summaryRes.json(),
     transactionsRes.json(),
     budgetRes.json(),
+    chartRes.json(),
   ]);
 
   return {
     summary: summary.data,
     transactions: transactions.data,
     budgets: budgets.data,
+    barChartData: chartData.data.barChartData,
+    pieChartData: chartData.data.pieChartData,
   };
 }
 
@@ -54,7 +63,8 @@ export default async function DashboardPage() {
     );
   }
 
-  const { summary, transactions, budgets } = await getDashboardData(token);
+  const { summary, transactions, budgets, barChartData, pieChartData } =
+    await getDashboardData(token);
 
   const budgetNearLimit = budgets.filter(
     (b: any) => b.isWarning || b.isExceeded,
@@ -72,9 +82,14 @@ export default async function DashboardPage() {
       </div>
       <DashboardSummaryCard summary={summary} />
 
-      <div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RecentTransactions transactions={transactions} />
         <BudgetOverview budgets={budgetNearLimit} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <BarChartMonthly data={barChartData} />
+        <PieChartCategory data={pieChartData} />
       </div>
     </div>
   );

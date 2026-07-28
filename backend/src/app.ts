@@ -9,6 +9,7 @@ import categoryRoutes from "./routes/categoryRoutes";
 import currencyRoutes from "./routes/currencyRoutes";
 import transactionRoutes from "./routes/transactionRoutes";
 import budgetRoutes from "./routes/budgetRoutes";
+import reportRoutes from "./routes/reportRoutes";
 
 dotenv.config();
 
@@ -41,6 +42,8 @@ app.use("/api/currency", currencyRoutes);
 app.use("/api/transactions", transactionRoutes);
 
 app.use("/api/budgets", budgetRoutes);
+
+app.use("/api/reports", reportRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "BukuSaku API ✅" });
