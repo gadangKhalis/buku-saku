@@ -40,6 +40,9 @@ async function getDashboardData(token: string) {
     chartRes.json(),
   ]);
 
+  console.log("chartRes status:", chartRes.status); // ← tambah
+  console.log("chartData raw:", chartData); // ← tambah
+
   return {
     summary: summary.data,
     transactions: transactions.data,

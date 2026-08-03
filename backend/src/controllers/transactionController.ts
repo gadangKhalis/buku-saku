@@ -1,3 +1,4 @@
+import { io } from "../app";
 import { Response } from "express";
 import { AuthRequest } from "../types";
 import prisma from "../lib/prisma";
@@ -69,6 +70,61 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
       null,
       transaction,
     );
+
+    if (type === "EXPENSE") {
+      console.log("=== BUDGET CHECK START ==="); //tambah
+      console.log("userId:", userId, "categoryId:", categoryId); // tambah
+      try {
+        const budget = await prisma.budget.findFirst({
+          where: { userId, categoryId },
+        });
+
+        console.log("budget found:", budget); // ← null kalau gak ada budget untuk kategori ini
+        if (budget) {
+          const now = new Date();
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          const startOfNextMonth = new Date(
+            now.getFullYear(),
+            now.getMonth() + 1,
+            1,
+          );
+
+          const aggregate = await prisma.transaction.aggregate({
+            where: {
+              userId,
+              categoryId,
+              type: "EXPENSE",
+              date: { gte: startOfMonth, lt: startOfNextMonth },
+            },
+            _sum: { amountInIDR: true },
+          });
+
+          const totalSpent = Number(aggregate._sum.amountInIDR ?? 0);
+          const limit = Number(budget.limitIDR);
+          const usagePercent = limit > 0 ? (totalSpent / limit) * 100 : 0;
+
+          console.log("totalSpent:", totalSpent);
+          console.log("limit:", limit);
+          console.log("usagePercent:", usagePercent); // ← cek apakah > 80
+          console.log("usagePercent >= 80 ?", usagePercent >= 80);
+          console.log("type of usagePercent:", typeof usagePercent);
+          console.log("type of totalSpent:", typeof totalSpent);
+          console.log("type of limit:", typeof limit);
+          if (usagePercent >= 80) {
+            io.to(userId).emit("budget:warning", {
+              categoryId,
+              categoryName: category.name,
+              usagePercent: Math.round(usagePercent * 100) / 100,
+              totalSpent,
+              limit,
+              isExceeded: usagePercent >= 100,
+            });
+          }
+        }
+      } catch (budgetCheckError) {
+        console.error("Budget warning check failed:", budgetCheckError);
+      }
+    }
 
     return res.status(201).json({
       message: "Transaction created successfully",

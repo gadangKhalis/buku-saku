@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import http from "http";
+import { Server } from "socket.io";
 import authRoutes from "./routes/auth.routes";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
@@ -14,6 +16,14 @@ import reportRoutes from "./routes/reportRoutes";
 dotenv.config();
 
 const app = express();
+const httpServer = http.createServer(app);
+
+export const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost: 3000",
+    credentials: true,
+  },
+});
 
 // Basic Middleware
 app.use(express.json());
@@ -49,8 +59,21 @@ app.get("/", (req, res) => {
   res.json({ message: "BukuSaku API ✅" });
 });
 
+io.on("connection", (socket) => {
+  console.log(`Socket connected: ${socket.id}`);
+
+  socket.on("join", (userId: string) => {
+    socket.join(userId);
+    console.log(`Socket ${socket.id} joined room ${userId}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`Socket disconnected: ${socket.id}`);
+  });
+});
+
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
