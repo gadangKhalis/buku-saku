@@ -24,5 +24,5 @@ export const ALLOWED_COLORS = [
   "#F472B6",
 ] as const;
 
-export type CategoryIcon = (typeof ALLOWED_ICON)[number];
+export type CategoryIcon = (typeof ALLOWED_ICONS)[number];
 export type CategoryColor = (typeof ALLOWED_COLORS)[number];
