@@ -6,6 +6,7 @@ import SessionProvider from "@/components/SessionProvider";
 import { Toaster } from "sonner";
 import SocketProvider from "@/components/SocketProvider";
 import { authOptions } from "@/lib/auth";
+import Navbar from "@/components/Navbar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -36,7 +37,10 @@ export default async function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <SessionProvider session={session}>
-          <SocketProvider>{children}</SocketProvider>
+          <SocketProvider>
+            <Navbar />
+            {children}
+          </SocketProvider>
           <Toaster richColors position="top-right" />
         </SessionProvider>
       </body>
