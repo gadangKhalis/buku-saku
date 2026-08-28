@@ -10,6 +10,7 @@ import {
 } from "../validations/transactionVal";
 import { getTodayUsdToIdrRate } from "../services/currencyService";
 import { createAuditLog } from "../services/auditLog";
+import { scanReceipt } from "../services/ai.service";
 
 export const createTransaction = async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
@@ -399,5 +400,32 @@ export const getTransactionSummary = async (
   } catch (error) {
     console.error("Get transaction SUmmary error:", error);
     return res.status(500).json({ message: "Terjadi kesalahan server" });
+  }
+};
+
+// POST /api/transactions/scan-receipt
+export const scanReceiptController = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "no file uploaded" });
+    }
+
+    const result = await scanReceipt(req.file.buffer, req.file.mimetype);
+
+    return res.status(200).json(result);
+  } catch (error: any) {
+    console.error(error);
+
+    // Handle JSON parse error
+    if (error instanceof SyntaxError) {
+      return res.status(422).json({
+        message: "AI failed read the struck - take photo again",
+      });
+    }
+
+    return (res.status(500), json({ message: "Internal server error" }));
   }
 };

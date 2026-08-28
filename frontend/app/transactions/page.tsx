@@ -16,6 +16,7 @@ import {
 import { Category } from "@/lib/types/category";
 import { Transaction, TransactionFormData } from "@/lib/types/transaction";
 import { toast } from "sonner";
+import ReceiptScanner, { ReceiptData } from "@/components/ReceiptScanner";
 
 const EMPTY_FORM: TransactionFormData = {
   categoryId: "",
@@ -267,6 +268,17 @@ export default function TransactionsPage() {
     }
   }
 
+  function handleScanSuccess(data: ReceiptData) {
+    setFormData((prev) => ({
+      ...prev,
+      amount: String(data.amount),
+      currency: data.currency as "IDR" | "USD",
+      description: data.description,
+      date: data.date,
+    }));
+    toast.info("Form has filled from struk - choose category and save");
+  }
+
   const previewAmountInIDR =
     formData.currency === "USD" && usdRate && Number(formData.amount) > 0
       ? Number(formData.amount) * usdRate
@@ -428,6 +440,14 @@ export default function TransactionsPage() {
               maxLength={200}
             />
           </div>
+
+          {!editingId && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Or</span>
+              <ReceiptScanner onScanSuccess={handleScanSuccess} />
+            </div>
+          )}
+          {formError && <p className="text-sm text-destructive">{formError}</p>}
 
           {formError && <p className="text-sm text-destructive">{formError}</p>}
 

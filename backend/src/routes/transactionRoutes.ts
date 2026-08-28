@@ -8,8 +8,12 @@ import {
   deleteTransaction,
   getTransactionSummary,
 } from "../controllers/transactionController";
+import multer from "multer";
+import { scanReceiptController } from "../controllers/transactionController";
 
 const router = Router();
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 /**
  * @swagger
@@ -137,6 +141,13 @@ router.post("/", authMiddle, createTransaction);
 router.get("/", authMiddle, getTransactions);
 
 router.get("/summary", authMiddle, getTransactionSummary);
+
+router.post(
+  "/scan-receipt",
+  authMiddle,
+  upload.single("receipt"),
+  scanReceiptController,
+);
 
 /**
  * @swagger
