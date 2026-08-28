@@ -10,6 +10,7 @@ const navLinks = [
   { href: "/budgets", label: "Budget" },
   { href: "/categories", label: "Category" },
   { href: "/split-bills", label: "Split Bill" },
+  { href: "/reports", label: "Reports" },
 ];
 
 export default function Navbar() {

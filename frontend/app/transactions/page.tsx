@@ -447,7 +447,6 @@ export default function TransactionsPage() {
               <ReceiptScanner onScanSuccess={handleScanSuccess} />
             </div>
           )}
-          {formError && <p className="text-sm text-destructive">{formError}</p>}
 
           {formError && <p className="text-sm text-destructive">{formError}</p>}
 

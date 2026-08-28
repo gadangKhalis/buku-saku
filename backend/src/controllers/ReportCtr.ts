@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../types";
 import prisma from "../lib/prisma";
+import { generatePdfReport } from "../services/pdf.service";
 
 export const getCharData = async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
@@ -79,5 +80,63 @@ export const getCharData = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error("Get chart data error", error);
     return res.status(500).json({ message: "failed to load chart" });
+  }
+};
+
+// GET /api/reports/pdf?month=2026-08
+export const downloadPdfReport = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.id;
+    const month = (req.query.month as string) ?? "";
+
+    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+      return res
+        .status(400)
+        .json({ message: "Format month invalid. Use format YYY - MM" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true },
+    });
+
+    const [year, monthNum] = month.split("-").map(Number);
+    const startDate = new Date(year, monthNum - 1, 1);
+    const endDate = new Date(year, monthNum, 1);
+
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        userId,
+        date: { gte: startDate, lt: endDate },
+      },
+      include: {
+        category: { select: { name: true } },
+      },
+      orderBy: { date: "asc" },
+    });
+
+    const totalIncome = transactions
+      .filter((t) => t.type === "INCOME")
+      .reduce((sum, t) => sum + t.amountInIDR, 0);
+
+    const totalExpense = transactions
+      .filter((t) => t.type === "EXPENSE")
+      .reduce((sum, t) => sum + t.amountInIDR, 0);
+    const balance = totalIncome - totalExpense;
+
+    generatePdfReport(
+      {
+        userName: user?.name ?? user?.email ?? "user",
+        month,
+        totalIncome,
+        totalExpense,
+        balance,
+        transactions,
+      },
+      res,
+    );
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
