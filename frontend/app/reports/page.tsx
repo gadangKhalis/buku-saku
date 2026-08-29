@@ -10,6 +10,7 @@ export default function ReportsPage() {
   const { data: session } = useSession();
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [isDownloadingExcel, setIsDownloadingExcel] = useState(false);
 
   const handleDownloadPdf = async () => {
     try {
@@ -37,14 +38,39 @@ export default function ReportsPage() {
     }
   };
 
+  const handleDownloadExcel = async () => {
+    try {
+      setIsDownloadingExcel(true);
+      toast.info("Sedang generate Excel...");
+
+      const res = await api.get(`/reports/excel?month=${month}`, {
+        responseType: "blob",
+      });
+
+      const url = URL.createObjectURL(res.data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `laporan-${month}.xlsx`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      toast.success("Excel berhasil didownload");
+    } catch (error: any) {
+      toast.error("Gagal generate Excel");
+      console.error(error);
+    } finally {
+      setIsDownloadingExcel(false);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Laporan Keuangan</h1>
+      <h1 className="text-2xl font-bold mb-6">Money Reports</h1>
 
       <div className="border rounded-lg p-6 space-y-6">
         {/* Pilih Bulan */}
         <div>
-          <label className="text-sm font-medium mb-1 block">Pilih Bulan</label>
+          <label className="text-sm font-medium mb-1 block">Choose Month</label>
           <input
             type="month"
             value={month}
@@ -61,6 +87,14 @@ export default function ReportsPage() {
             className="w-full"
           >
             {isDownloadingPdf ? "Generating..." : "⬇ Download PDF"}
+          </Button>
+          <Button
+            onClick={handleDownloadExcel}
+            disabled={isDownloadingExcel || !month}
+            variant="outline"
+            className="w-full"
+          >
+            {isDownloadingExcel ? "Generating..." : "⬇ Download Excel"}
           </Button>
         </div>
       </div>
