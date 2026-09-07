@@ -13,6 +13,7 @@ import transactionRoutes from "./routes/transactionRoutes";
 import budgetRoutes from "./routes/budgetRoutes";
 import reportRoutes from "./routes/reportRoutes";
 import splitBillRoutes from "./routes/splitBillRoutes";
+import adminRoutes from "./routes/adminRoutes";
 
 dotenv.config();
 
@@ -57,6 +58,8 @@ app.use("/api/budgets", budgetRoutes);
 app.use("/api/reports", reportRoutes);
 
 app.use("/api/split-bills", splitBillRoutes);
+
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "BukuSaku API ✅" });

@@ -20,7 +20,7 @@ export async function getTodayUsdToIdrRate(): Promise<number> {
     if (!response.ok) {
       throw new Error(`External API responded with status ${response.status}`);
     }
-    const data = await response.json();
+    const data = (await response.json()) as { rates: { IDR: number } };
     const rate = data.rates.IDR;
 
     if (typeof rate !== "number") {

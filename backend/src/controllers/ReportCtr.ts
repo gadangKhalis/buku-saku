@@ -4,7 +4,7 @@ import prisma from "../lib/prisma";
 import { generatePdfReport } from "../services/pdf.service";
 import { generateExcelReport } from "../services/excel.service";
 
-export const getCharData = async (req: AuthRequest, res: Response) => {
+export const getChartData = async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
 
   try {
@@ -85,7 +85,7 @@ export const getCharData = async (req: AuthRequest, res: Response) => {
 };
 
 // GET /api/reports/pdf?month=2026-08
-export const downloadPdfReport = async (req: AuthRequest, res: Response) => {
+export const downloadPdfReport = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const month = (req.query.month as string) ?? "";
@@ -125,17 +125,14 @@ export const downloadPdfReport = async (req: AuthRequest, res: Response) => {
       .reduce((sum, t) => sum + t.amountInIDR, 0);
     const balance = totalIncome - totalExpense;
 
-    generatePdfReport(
-      {
-        userName: user?.name ?? user?.email ?? "user",
-        month,
-        totalIncome,
-        totalExpense,
-        balance,
-        transactions,
-      },
-      res,
+    const buffer = await generatePdfReport(data, month);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="report-${month}.pdf"`,
     );
+    res.send(buffer);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });

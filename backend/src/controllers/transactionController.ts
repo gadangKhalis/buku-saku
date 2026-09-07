@@ -64,7 +64,7 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
     });
 
     await createAuditLog(
-      userId,
+      req.user.id,
       "CREATE",
       "Transaction",
       transaction.id,
