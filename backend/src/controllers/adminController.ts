@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
-import { prisma } from "../app";
-import { take } from "pdfkit/js/pdfkit.standalone";
+import prisma from "../lib/prisma";
+
+const param = (value: string | string[]): string =>
+  Array.isArray(value) ? value[0] : value;
 
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
@@ -12,7 +14,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
         role: true,
         createdAt: true,
         _count: {
-          select: { transactions: true },
+          select: { transaction: true },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -26,13 +28,13 @@ export const getAllUsers = async (req: Request, res: Response) => {
 
 export const updateUserRole = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = param(req.params.id);
     const { role } = req.body;
     if (!["MEMBER", "ADMIN"].includes(role)) {
       return res.status(400).json({ message: "Role invalid" });
     }
     const updated = await prisma.user.update({
-      where: { id },
+      where: { id: id as string },
       data: { role },
       select: { id: true, name: true, email: true, role: true },
     });
@@ -55,8 +57,8 @@ export const getAuditLogs = async (req: Request, res: Response) => {
 
     const where: any = {};
     if (userId) where.userId = userId as string;
-    if (entity) where.userId = entity as string;
-    if (action) where.userId = action as string;
+    if (entity) where.entity = entity as string;
+    if (action) where.action = action as string;
     if (startDate || endDate) {
       where.createdAt = {
         ...(startDate && { gte: new Date(startDate as string) }),
@@ -85,7 +87,7 @@ export const getAuditLogs = async (req: Request, res: Response) => {
         total,
         page: Number(page),
         limit: Number(limit),
-        totalPages: Math.cell(total / Number(limit)),
+        totalPages: Math.ceil(total / Number(limit)),
       },
     });
   } catch (error) {

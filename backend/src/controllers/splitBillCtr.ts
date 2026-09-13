@@ -1,7 +1,11 @@
-import { Request, Response } from "express";
+import { Response } from "express";
+import { AuthRequest } from "../types";
 import prisma from "../lib/prisma";
 
-export const createSplit = async (req: Request, res: Response) => {
+const param = (value: string | string[]): string =>
+  Array.isArray(value) ? value[0] : value;
+
+export const createSplit = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
     const { transactionId, note, items } = req.body;
@@ -62,7 +66,7 @@ export const createSplit = async (req: Request, res: Response) => {
 };
 
 // GET /api/split-bills
-export const getSplitBills = async (req: Request, res: Response) => {
+export const getSplitBills = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
     const splitBills = await prisma.splitBill.findMany({
@@ -85,10 +89,10 @@ export const getSplitBills = async (req: Request, res: Response) => {
 };
 
 // GET /api/split-bills/:id
-export const getSplitBillById = async (req: Request, res: Response) => {
+export const getSplitBillById = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
-    const { id } = req.params;
+    const id = param(req.params.id);
 
     const splitBill = await prisma.splitBill.findFirst({
       where: {
@@ -114,10 +118,11 @@ export const getSplitBillById = async (req: Request, res: Response) => {
   }
 };
 // PATCH /api/split-bills/:id/items/:itemId/pay
-export const paySplitBillItem = async (req: Request, res: Response) => {
+export const paySplitBillItem = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
-    const { id, itemId } = req.params;
+    const id = param(req.params.id);
+    const itemId = param(req.params.itemId);
 
     const splitBill = await prisma.splitBill.findFirst({
       where: {
@@ -143,10 +148,10 @@ export const paySplitBillItem = async (req: Request, res: Response) => {
 };
 
 // DELETE /api/split-bills/:id
-export const deleteSplitBill = async (req: Request, res: Response) => {
+export const deleteSplitBill = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
-    const { id } = req.params;
+    const id = param(req.params.id);
 
     const splitBill = await prisma.splitBill.findFirst({
       where: {

@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { getAllUsers } from "../controllers/adminController";
 import { authMiddle } from "../middlewares/auth.middle";
 import { adminGuard } from "../middlewares/adminGuard";
 import {
@@ -9,9 +8,6 @@ import {
 } from "../controllers/adminController";
 
 const router = Router();
-
-router.use(authMiddle);
-router.use(adminGuard);
 
 /**
  * @swagger
@@ -27,7 +23,7 @@ router.use(adminGuard);
  *       403:
  *         description: Forbidden - ADMIN only
  */
-router.get("/users", getAllUsers);
+router.get("/users", authMiddle, adminGuard, getAllUsers);
 
 /**
  * @swagger
@@ -64,7 +60,7 @@ router.get("/users", getAllUsers);
  *       403:
  *         description: Forbidden - ADMIN only
  */
-router.put("/users/:id/role", updateUserRole);
+router.put("/users/:id/role", authMiddle, adminGuard, updateUserRole);
 
 /**
  * @swagger
@@ -115,6 +111,5 @@ router.put("/users/:id/role", updateUserRole);
  *       403:
  *         description: Forbidden - ADMIN only
  */
-router.get("/audit-logs", getAuditLogs);
-
+router.get("/audit-logs", authMiddle, adminGuard, getAuditLogs);
 export default router;

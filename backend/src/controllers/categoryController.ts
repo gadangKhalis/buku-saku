@@ -66,7 +66,7 @@ export const getCategories = async (req: AuthRequest, res: Response) => {
 
 export const getCategoryById = async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   try {
     const category = await prisma.category.findFirst({
@@ -88,7 +88,7 @@ export const getCategoryById = async (req: AuthRequest, res: Response) => {
 
 export const updateCategory = async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   const parseResult = updateCategorySchema.safeParse(req.body);
   if (!parseResult.success) {
@@ -106,7 +106,7 @@ export const updateCategory = async (req: AuthRequest, res: Response) => {
     }
 
     const updated = await prisma.category.update({
-      where: { id },
+      where: { id: id as string },
       data: parseResult.data,
     });
 
@@ -125,7 +125,7 @@ export const updateCategory = async (req: AuthRequest, res: Response) => {
 
 export const deleteCategory = async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   try {
     const existing = await prisma.category.findFirst({ where: { id, userId } });
@@ -133,7 +133,7 @@ export const deleteCategory = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "Category not found" });
     }
 
-    await prisma.category.delete({ where: { id } });
+    await prisma.category.delete({ where: { id: id as string } });
 
     return res.status(200).json({ message: "Category deleted successfully" });
   } catch (error: any) {

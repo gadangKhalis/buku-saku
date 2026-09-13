@@ -1,5 +1,4 @@
 import ExcelJS from "exceljs";
-import { Response } from "express";
 
 interface Transaction {
   date: string;
@@ -9,7 +8,7 @@ interface Transaction {
   amountInIDR: number;
 }
 
-interface ExcelReportData {
+export interface ExcelReportData {
   userName: string;
   month: string;
   totalIncome: number;
@@ -20,13 +19,12 @@ interface ExcelReportData {
 
 export const generateExcelReport = async (
   data: ExcelReportData,
-  res: Response,
-) => {
+): Promise<Buffer> => {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "BukuSaku";
   workbook.created = new Date();
 
-  const summarySheet = workbook.addWorksheet("SUmmary");
+  const summarySheet = workbook.addWorksheet("Summary"); // ← fix typo SUmmary
 
   summarySheet.columns = [
     { header: "", key: "label", width: 20 },
@@ -41,9 +39,10 @@ export const generateExcelReport = async (
   summarySheet.addRow({ label: "Expense", value: data.totalExpense });
   summarySheet.addRow({ label: "Balance", value: data.balance });
 
-  ["A5", "A6", "A7"].forEach((_, i) => {
-    const cell = summarySheet.getCell(`B${5 + 1}`);
-    cell.numFmt = "#, ##0";
+  // ← fix bug: loop tidak dipakai, langsung set cell yang benar
+  ["B5", "B6", "B7"].forEach((cellAddr) => {
+    const cell = summarySheet.getCell(cellAddr);
+    cell.numFmt = "#,##0";
   });
 
   summarySheet.getCell("A1").font = { bold: true, size: 14 };
@@ -87,24 +86,12 @@ export const generateExcelReport = async (
     }
 
     row.getCell("amount").numFmt = "#,##0";
-
     row.getCell("type").font = {
-      color: {
-        argb: trx.type === "INCOME" ? "FF16A34A" : "FFDC2626",
-      },
+      color: { argb: trx.type === "INCOME" ? "FF16A34A" : "FFDC2626" },
     };
   });
 
-  //   Set Response headers
-  res.setHeader(
-    "Content-Type",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  );
-  res.setHeader(
-    "Content-Disposition",
-    `attachment; filename=laporan-${data.month}.xlsx`,
-  );
-
-  await workbook.xlsx.write(res);
-  res.end();
+  // Return Buffer instead of streaming to res
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
 };

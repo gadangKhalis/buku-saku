@@ -1,4 +1,4 @@
-import { request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 
 export const adminGuard = (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user;

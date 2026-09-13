@@ -3,6 +3,9 @@ import { AuthRequest } from "../types";
 import prisma from "../lib/prisma";
 import { z } from "zod";
 
+const param = (value: string | string[]): string =>
+  Array.isArray(value) ? value[0] : value;
+
 // Schema validation input budget
 const budgetSchema = z.object({
   categoryId: z.string().min(1),
@@ -97,9 +100,11 @@ export const createBudget = async (req: AuthRequest, res: Response) => {
 export const updateBudget = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.body!.id;
-    const { id } = req.params;
+    const id = param(req.params.id);
 
-    const existing = await prisma.budget.findFirst({ where: { id, userId } });
+    const existing = await prisma.budget.findFirst({
+      where: { id: id as string, userId },
+    });
     if (!existing) {
       return res.status(404).json({ message: "Budget not found" });
     }
@@ -126,8 +131,7 @@ export const updateBudget = async (req: AuthRequest, res: Response) => {
 export const deleteBudget = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
-    const { id } = req.params;
-
+    const id = param(req.params.id);
     const existing = await prisma.budget.findFirst({ where: { id, userId } });
     if (!existing) {
       return res.status(404).json({ message: "Budget tidak ditemukan" });

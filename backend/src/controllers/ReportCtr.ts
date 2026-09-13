@@ -85,7 +85,7 @@ export const getChartData = async (req: AuthRequest, res: Response) => {
 };
 
 // GET /api/reports/pdf?month=2026-08
-export const downloadPdfReport = async (req: Request, res: Response) => {
+export const downloadPdfReport = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
     const month = (req.query.month as string) ?? "";
@@ -93,7 +93,7 @@ export const downloadPdfReport = async (req: Request, res: Response) => {
     if (!month || !/^\d{4}-\d{2}$/.test(month)) {
       return res
         .status(400)
-        .json({ message: "Format month invalid. Use format YYY - MM" });
+        .json({ message: "Format month invalid. Use format YYYY-MM" });
     }
 
     const user = await prisma.user.findUnique({
@@ -106,13 +106,8 @@ export const downloadPdfReport = async (req: Request, res: Response) => {
     const endDate = new Date(year, monthNum, 1);
 
     const transactions = await prisma.transaction.findMany({
-      where: {
-        userId,
-        date: { gte: startDate, lt: endDate },
-      },
-      include: {
-        category: { select: { name: true } },
-      },
+      where: { userId, date: { gte: startDate, lt: endDate } },
+      include: { category: { select: { name: true } } },
       orderBy: { date: "asc" },
     });
 
@@ -123,9 +118,25 @@ export const downloadPdfReport = async (req: Request, res: Response) => {
     const totalExpense = transactions
       .filter((t) => t.type === "EXPENSE")
       .reduce((sum, t) => sum + t.amountInIDR, 0);
-    const balance = totalIncome - totalExpense;
 
-    const buffer = await generatePdfReport(data, month);
+    const buffer = await generatePdfReport(
+      // ← generatePdfReport bukan Excel
+      {
+        userName: user?.name ?? user?.email ?? "user",
+        month,
+        totalIncome,
+        totalExpense,
+        balance: totalIncome - totalExpense,
+        transactions: transactions.map((t) => ({
+          date: t.date.toISOString(),
+          description: t.description,
+          category: { name: t.category.name },
+          type: t.type,
+          amountInIDR: t.amountInIDR,
+        })),
+      },
+      month,
+    );
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
@@ -138,6 +149,7 @@ export const downloadPdfReport = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 // GET /api/reports/excel?month=2026-08
 export const downloadExcelReport = async (req: AuthRequest, res: Response) => {
   try {
@@ -147,7 +159,7 @@ export const downloadExcelReport = async (req: AuthRequest, res: Response) => {
     if (!month || !/^\d{4}-\d{2}$/.test(month)) {
       return res
         .status(400)
-        .json({ message: "Format month invalid. Use format YYY - MM" });
+        .json({ message: "Format month invalid. Use format YYYY-MM" });
     }
 
     const user = await prisma.user.findUnique({
@@ -160,13 +172,8 @@ export const downloadExcelReport = async (req: AuthRequest, res: Response) => {
     const endDate = new Date(year, monthNum, 1);
 
     const transactions = await prisma.transaction.findMany({
-      where: {
-        userId,
-        date: { gte: startDate, lt: endDate },
-      },
-      include: {
-        category: { select: { name: true } },
-      },
+      where: { userId, date: { gte: startDate, lt: endDate } },
+      include: { category: { select: { name: true } } },
       orderBy: { date: "asc" },
     });
 
@@ -177,19 +184,32 @@ export const downloadExcelReport = async (req: AuthRequest, res: Response) => {
     const totalExpense = transactions
       .filter((t) => t.type === "EXPENSE")
       .reduce((sum, t) => sum + t.amountInIDR, 0);
-    const balance = totalIncome - totalExpense;
 
-    generateExcelReport(
-      {
-        userName: user?.name ?? user?.email ?? "user",
-        month,
-        totalIncome,
-        totalExpense,
-        balance,
-        transactions,
-      },
-      res,
+    const buffer = await generateExcelReport({
+      // ← tidak ada res, return Buffer
+      userName: user?.name ?? user?.email ?? "user",
+      month,
+      totalIncome,
+      totalExpense,
+      balance: totalIncome - totalExpense,
+      transactions: transactions.map((t) => ({
+        date: t.date.toISOString(),
+        description: t.description,
+        category: { name: t.category.name },
+        type: t.type,
+        amountInIDR: t.amountInIDR,
+      })),
+    });
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="report-${month}.xlsx"`,
+    );
+    res.send(buffer);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });

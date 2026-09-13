@@ -21,7 +21,7 @@ export const scanReceipt = async (
   const response = await client.messages.create({
     model: "claude-haiku-4-5",
     max_tokens: 1024,
-    message: [
+    messages: [
       {
         role: "user",
         content: [
@@ -33,7 +33,7 @@ export const scanReceipt = async (
                 | "image/jpeg"
                 | "image/png"
                 | "image/gif"
-                | "image|webp",
+                | "image/webp",
               data: base64Image,
             },
           },

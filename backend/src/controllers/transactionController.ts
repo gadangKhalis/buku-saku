@@ -12,6 +12,9 @@ import { getTodayUsdToIdrRate } from "../services/currencyService";
 import { createAuditLog } from "../services/auditLog";
 import { scanReceipt } from "../services/ai.service";
 
+const param = (value: string | string[]): string =>
+  Array.isArray(value) ? value[0] : value;
+
 export const createTransaction = async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
   const parseResult = createTransactionSchema.safeParse(req.body);
@@ -64,7 +67,7 @@ export const createTransaction = async (req: AuthRequest, res: Response) => {
     });
 
     await createAuditLog(
-      req.user.id,
+      req.user!.id,
       "CREATE",
       "Transaction",
       transaction.id,
@@ -217,7 +220,7 @@ export const getTransactions = async (req: AuthRequest, res: Response) => {
 
 export const getTransactionById = async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
-  const { id } = req.params;
+  const id = param(req.params.id);
 
   try {
     const transaction = await prisma.transaction.findFirst({
@@ -240,7 +243,7 @@ export const getTransactionById = async (req: AuthRequest, res: Response) => {
 
 export const updateTransaction = async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
-  const { id } = req.params;
+  const id = param(req.params.id);
 
   const parseResult = updateTransactionSchema.safeParse(req.body);
   if (!parseResult.success) {
@@ -315,7 +318,7 @@ export const updateTransaction = async (req: AuthRequest, res: Response) => {
 
 export const deleteTransaction = async (req: AuthRequest, res: Response) => {
   const userId = req.user!.id;
-  const { id } = req.params;
+  const id = param(req.params.id);
 
   try {
     const existing = await prisma.transaction.findFirst({
@@ -325,7 +328,7 @@ export const deleteTransaction = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "Transaction not found" });
     }
 
-    await prisma.transaction.delete({ where: { id } });
+    await prisma.transaction.delete({ where: { id: id as string } });
     await createAuditLog(userId, "DELETE", "Transaction", id, existing, null);
 
     return res
@@ -426,6 +429,6 @@ export const scanReceiptController = async (
       });
     }
 
-    return (res.status(500), json({ message: "Internal server error" }));
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
