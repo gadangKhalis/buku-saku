@@ -4,7 +4,7 @@ const config = {
   testEnvironment: "node",
   testMatch: ["**/__tests__/**/*.test.ts"],
   clearMocks: true,
-  setupFiles: ["dotenv/config"], // ← tambahkan ini
+  setupFiles: ["dotenv/config"],
   forceExit: true,
 };
 

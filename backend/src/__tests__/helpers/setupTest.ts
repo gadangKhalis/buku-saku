@@ -1,5 +1,14 @@
 import prisma from "../../lib/prisma";
+import jwt from "jsonwebtoken";
 
+export const generateTestToken = (
+  userId: string,
+  role: string = "MEMBER",
+): string => {
+  return jwt.sign({ id: userId, role }, process.env.NEXTAUTH_SECRET as string, {
+    expiresIn: "1d",
+  });
+};
 export const cleanDatabase = async () => {
   await prisma.auditLog.deleteMany();
   await prisma.splitBillItem.deleteMany();
