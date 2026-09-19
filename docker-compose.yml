@@ -1,0 +1,66 @@
+services:
+  # ────────────────────────────────
+  # DATABASE
+  # ────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: bukusaku_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Gadang@17
+      POSTGRES_DB: BukuSaku
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - bukusaku_network
+
+  # ────────────────────────────────
+  # BACKEND
+  # ────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bukusaku_backend
+    environment:
+      DATABASE_URL: postgresql://postgres:Gadang%4017@localhost:5432/BukuSaku
+      JWT_SECRET: ${JWT_SECRET}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NODE_ENV: production
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+    networks:
+      - bukusaku_network
+
+  # ────────────────────────────────
+  # FRONTEND
+  # ────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bukusaku_frontend
+    environment:
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXT_PUBLIC_API_URL: http://backend:5000/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - bukusaku_network
+
+# ────────────────────────────────
+# VOLUMES & NETWORKS
+# ────────────────────────────────
+volumes:
+  postgres_data:
+
+networks:
+  bukusaku_network:
+    driver: bridge
