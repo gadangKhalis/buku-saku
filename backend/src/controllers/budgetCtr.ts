@@ -84,7 +84,12 @@ export const createBudget = async (req: AuthRequest, res: Response) => {
       data: { userId, ...parsed.data },
       include: { category: true },
     });
-    res.status(201).json({ data: budget });
+    res.status(201).json({
+      data: {
+        ...budget,
+        limitIDR: Number(budget.limitIDR),
+      },
+    });
   } catch (error: any) {
     if (error.code === "P2002") {
       return res
