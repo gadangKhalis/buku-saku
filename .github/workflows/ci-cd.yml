@@ -48,15 +48,11 @@ jobs:
 
       - name: Generate Prisma client
         working-directory: backend
-        run: npx prisma generate --schema=./prisma/schema.prisma
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bukusaku_test
+        run: npx prisma generate --url="postgresql://postgres:postgres@localhost:5432/bukusaku_test"
 
       - name: Push schema to test database
         working-directory: backend
-        run: npx prisma db push --schema=./prisma/schema.prisma --skip-generate
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bukusaku_test
+        run: npx prisma db push --url="postgresql://postgres:postgres@localhost:5432/bukusaku_test"
 
       - name: Run backend tests
         working-directory: backend
