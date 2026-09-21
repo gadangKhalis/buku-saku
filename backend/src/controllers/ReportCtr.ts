@@ -57,22 +57,28 @@ export const getChartData = async (req: AuthRequest, res: Response) => {
       _sum: { amountInIDR: true },
     });
     // take detail category
-    const categoryIds = categoryUsage.map((c) => c.categoryId);
+    const categoryIds = categoryUsage.map(
+      (c: (typeof categoryUsage)[number]) => c.categoryId,
+    );
     const categories = await prisma.category.findMany({
       where: { id: { in: categoryIds } },
       select: { id: true, name: true, color: true },
     });
-    const categoryDetailMap = new Map(categories.map((c) => [c.id, c]));
+    const categoryDetailMap = new Map(
+      categories.map((c: (typeof categories)[number]) => [c.id, c]),
+    );
 
-    const pieChartData = categoryUsage.map((c) => {
-      const detail = categoryDetailMap.get(c.categoryId);
-      return {
-        categoryId: c.categoryId,
-        name: detail?.name ?? "unknown",
-        color: detail?.color ?? "#9999",
-        total: Math.round(Number(c._sum.amountInIDR ?? 0) * 100) / 100,
-      };
-    });
+    const pieChartData = categoryUsage.map(
+      (c: (typeof categoryUsage)[number]) => {
+        const detail = categoryDetailMap.get(c.categoryId);
+        return {
+          categoryId: c.categoryId,
+          name: detail?.name ?? "unknown",
+          color: detail?.color ?? "#9999",
+          total: Math.round(Number(c._sum.amountInIDR ?? 0) * 100) / 100,
+        };
+      },
+    );
 
     return res.status(200).json({
       message: "Chart data fetched successfully ",
@@ -112,12 +118,20 @@ export const downloadPdfReport = async (req: AuthRequest, res: Response) => {
     });
 
     const totalIncome = transactions
-      .filter((t) => t.type === "INCOME")
-      .reduce((sum, t) => sum + t.amountInIDR, 0);
+      .filter((t: (typeof transactions)[number]) => t.type === "INCOME")
+      .reduce(
+        (sum: number, t: (typeof transactions)[number]) =>
+          sum + Number(t.amountInIDR),
+        0,
+      );
 
     const totalExpense = transactions
-      .filter((t) => t.type === "EXPENSE")
-      .reduce((sum, t) => sum + t.amountInIDR, 0);
+      .filter((t: (typeof transactions)[number]) => t.type === "EXPENSE")
+      .reduce(
+        (sum: number, t: (typeof transactions)[number]) =>
+          sum + Number(t.amountInIDR),
+        0,
+      );
 
     const buffer = await generatePdfReport(
       // ← generatePdfReport bukan Excel

@@ -32,5 +32,5 @@ export interface SplitBillFormItem {
 export interface SplitBillForm {
   transactionId: string;
   note: string | null;
-  item: SplitBillFormItem[];
+  items: SplitBillFormItem[];
 }

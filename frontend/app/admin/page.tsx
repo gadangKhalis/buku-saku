@@ -64,7 +64,7 @@ export default function AdminPage() {
     try {
       await api.put(`/admin/users/${id}/role`, { role: newRole });
       setUsers((prev) =>
-        prev.map((u) => (u.id === id ? { ...u, role: newRole } : U)),
+        prev.map((u) => (u.id === id ? { ...u, role: newRole } : u)),
       );
     } catch (error) {
       console.error("Role change failed", error);

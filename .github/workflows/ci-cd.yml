@@ -86,9 +86,9 @@ jobs:
         run: |
           npm ci
           npx prisma generate
-          npx tsc --noEmit
-          env:
-            DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+          npm run build
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
 
       - name: Build frontend
         working-directory: frontend
