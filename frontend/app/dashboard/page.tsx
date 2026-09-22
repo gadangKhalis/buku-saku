@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import LogoutBtn from "@/components/LogoutBtn";
 import DashboardSummaryCard from "@/components/DashboardSummaryCards";
 import RecentTransactions from "@/components/RecentTransactions";
 import BudgetOverview from "@/components/BudgetOverview";
@@ -81,7 +80,6 @@ export default async function DashboardPage() {
           <p className="text-gray-500">Selamat Datang, {session.user?.name}!</p>
           <p>Email: {session.user?.email}</p>
         </div>
-        <LogoutBtn />
       </div>
       <DashboardSummaryCard summary={summary} />
 

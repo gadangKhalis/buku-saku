@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 import SocketProvider from "@/components/SocketProvider";
 import { authOptions } from "@/lib/auth";
 import Navbar from "@/components/Navbar";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -14,7 +15,6 @@ export const metadata: Metadata = {
   title: "BukuSaku",
   description: "Smart Expense Tracker",
   manifest: "/manifest.json",
-  themeColor: "#2563EB",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -34,15 +34,22 @@ export default async function RootLayout({
   const session = await getServerSession(authOptions);
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <SessionProvider session={session}>
-          <SocketProvider>
-            <Navbar />
-            {children}
-          </SocketProvider>
-          <Toaster richColors position="top-right" />
-        </SessionProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SessionProvider session={session}>
+            <SocketProvider>
+              <Navbar />
+              {children}
+            </SocketProvider>
+            <Toaster richColors position="top-right" />
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
