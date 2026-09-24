@@ -14,10 +14,12 @@ import budgetRoutes from "./routes/budgetRoutes";
 import reportRoutes from "./routes/reportRoutes";
 import splitBillRoutes from "./routes/splitBillRoutes";
 import adminRoutes from "./routes/adminRoutes";
+import helmet from "helmet";
 
 dotenv.config();
 
 const app = express();
+app.use(helmet());
 const httpServer = http.createServer(app);
 
 export const io = new Server(httpServer, {

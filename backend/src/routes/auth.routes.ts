@@ -1,7 +1,18 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { register, login, logout } from "../controllers/auth.ctr";
 import { authMiddle } from "../middlewares/auth.middle";
 import { oauthSync } from "../controllers/auth.ctr";
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: {
+    message: "Too many attempts, please try agaim after 15 minutes",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const router = Router();
 
@@ -37,7 +48,7 @@ const router = Router();
  *       400:
  *         description: Registration Failed / Email already registered
  */
-router.post("/register", register);
+router.post("/register", authLimiter, register);
 
 /**
  * @swagger
@@ -68,7 +79,7 @@ router.post("/register", register);
  *       401:
  *         description: Login Failed / Email & Password wrong combination
  */
-router.post("/login", login);
+router.post("/login", authLimiter, login);
 
 /**
  * @swagger
