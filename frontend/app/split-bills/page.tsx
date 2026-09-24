@@ -7,6 +7,8 @@ import { SplitBill } from "@/types/splitBill";
 import SplitBillCard from "@/components/SplitBillCard";
 import SplitBillFormModal from "@/components/SplitBillFormModal";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import EmptyState from "@/components/EmptyState";
 
 export default function SplitBillsPage() {
   const { data: session } = useSession();
@@ -55,11 +57,40 @@ export default function SplitBillsPage() {
         <Button onClick={() => setIsModalOpen(true)}>+ Buat Split Bill</Button>
       </div>
 
-      {isLoading ? (
-        <p className="text-muted-foreground"> Loading data...</p>
-      ) : splitBills.length === 0 ? (
-        <p className="text-muted-foreground">No Split Bills yet</p>
-      ) : (
+      {/* LIST STATES */}
+      {isLoading && (
+        <div className="flex flex-col gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="rounded-lg border p-4 space-y-3">
+              <div className="flex justify-between">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-5 w-20" />
+              </div>
+              <Skeleton className="h-4 w-32" />
+              <div className="space-y-2">
+                {Array.from({ length: 2 }).map((_, j) => (
+                  <div key={j} className="flex justify-between items-center">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!isLoading && splitBills.length === 0 && (
+        <EmptyState
+          icon="🧾"
+          title="Belum ada split bill"
+          description="Catat tagihan bersama dan lacak siapa yang sudah bayar."
+          actionLabel="Buat Split Bill"
+          onAction={() => setIsModalOpen(true)}
+        />
+      )}
+
+      {!isLoading && splitBills.length > 0 && (
         <div className="flex flex-col gap-4">
           {splitBills.map((sb) => (
             <SplitBillCard

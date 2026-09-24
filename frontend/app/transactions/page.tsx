@@ -17,6 +17,8 @@ import { Category } from "@/lib/types/category";
 import { Transaction, TransactionFormData } from "@/lib/types/transaction";
 import { toast } from "sonner";
 import ReceiptScanner, { ReceiptData } from "@/components/ReceiptScanner";
+import { Skeleton } from "@/components/ui/skeleton";
+import EmptyState from "@/components/EmptyState";
 
 const EMPTY_FORM: TransactionFormData = {
   categoryId: "",
@@ -546,23 +548,50 @@ export default function TransactionsPage() {
 
       {/* List States */}
       {isLoading && (
-        <p className="text-muted-foreground text-sm">
-          Loading Transactions ....
-        </p>
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between border rounded-md p-3"
+            >
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-9 h-9 rounded-full" />
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </div>
+              <Skeleton className="h-4 w-20" />
+            </div>
+          ))}
+        </div>
       )}
 
       {!isLoading && error && (
-        <p className="text-sm text-destructive">{error}</p>
+        <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+          <div className="text-4xl">⚠️</div>
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <button
+            onClick={fetchTransactions}
+            className="text-sm text-primary underline underline-offset-4"
+          >
+            Coba lagi
+          </button>
+        </div>
       )}
 
       {!isLoading && !error && transactions.length === 0 && (
-        <p className="text-muted-foreground text-sm">
-          No transaction yet. Click add Transaction above to create ones
-        </p>
+        <EmptyState
+          icon="💸"
+          title="Belum ada transaksi"
+          description="Mulai catat pengeluaran atau pemasukan pertamamu."
+          actionLabel="Tambah Transaksi"
+          onAction={openCreateForm}
+        />
       )}
 
       {!isLoading && !error && transactions.length > 0 && (
-        <ul>
+        <ul className="space-y-2">
           {transactions.map((transaction) => (
             <li
               key={transaction.id}
@@ -586,9 +615,13 @@ export default function TransactionsPage() {
                 </div>
               </div>
 
-              <div>
+              <div className="flex items-center gap-2">
                 <span
-                  className={`font-medium text-sm ${transaction.type === "INCOME" ? "text-green-600" : "text-destructive"}`}
+                  className={`font-medium text-sm ${
+                    transaction.type === "INCOME"
+                      ? "text-green-600"
+                      : "text-destructive"
+                  }`}
                 >
                   {transaction.type === "INCOME" ? "+" : "-"}{" "}
                   {formatRupiah(transaction.amountInIDR)}

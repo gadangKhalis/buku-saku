@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Summary {
   totalIncome: number;
@@ -109,7 +110,14 @@ export default function ReportsPage() {
 
         {/* Preview Summary */}
         {isLoadingSummary && (
-          <p className="text-sm text-muted-foreground">Memuat ringkasan...</p>
+          <div className="grid grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="bg-muted rounded-lg p-4 space-y-2">
+                <Skeleton className="h-3 w-16 mx-auto" />
+                <Skeleton className="h-5 w-24 mx-auto" />
+              </div>
+            ))}
+          </div>
         )}
 
         {!isLoadingSummary && summary && (

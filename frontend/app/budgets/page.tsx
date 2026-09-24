@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import api from "../../lib/api";
 import BudgetCard from "../../components/BudgetCard";
 import BudgetFormModal from "../../components/BudgetFormModal";
+import { Skeleton } from "@/components/ui/skeleton";
+import EmptyState from "@/components/EmptyState";
+import { Button } from "@/components/ui/button";
 
 interface Budget {
   id: string;
@@ -81,19 +84,53 @@ export default function BudgetsPage() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Budget</h1>
-        <button
-          onClick={openCreateModal}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-        >
-          + Set Budget
-        </button>
+        <Button onClick={openCreateModal}>+ Set Budget</Button>
       </div>
 
-      {budgets.length === 0 ? (
-        <p>No budget set yet</p>
-      ) : (
+      {/* LIST STATES */}
+      {loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {" "}
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-lg border p-4 space-y-3">
+              <div className="flex justify-between">
+                <Skeleton className="h-5 w-28" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <Skeleton className="h-2 w-full rounded-full" />
+              <div className="flex justify-between">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!loading && error && (
+        <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+          <div className="text-4xl">⚠️</div>
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <button
+            onClick={fetchBudgets}
+            className="text-sm text-primary underline underline-offset-4"
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && budgets.length === 0 && (
+        <EmptyState
+          icon="🎯"
+          title="No budget yet"
+          description="Set budget per Category to start tracking your expense."
+          actionLabel="Set Budget"
+          onAction={openCreateModal}
+        />
+      )}
+
+      {!loading && !error && budgets.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {budgets.map((budget) => (
             <BudgetCard
               key={budget.id}

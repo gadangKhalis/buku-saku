@@ -30,6 +30,8 @@ import {
 } from "@/lib/constants/categoryPresets";
 import { Category, CategoryFormData } from "@/lib/types/category";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import EmptyState from "@/components/EmptyState";
 
 const ICON_MAP: Record<CategoryIcon, React.ElementType> = {
   utensils: Utensils,
@@ -234,18 +236,48 @@ export default function CategoriesPage() {
       )}
 
       {/* LIST STATES */}
+      {/* LIST STATES */}
       {isLoading && (
-        <p className="text-muted-foreground text-sm">Loading Category....</p>
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between border rounded-md p-3"
+            >
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-9 h-9 rounded-full" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-4" />
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {!isLoading && error && (
-        <p className="text-sm text-destructive">{error}</p>
+        <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+          <div className="text-4xl">⚠️</div>
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <button
+            onClick={fetchCategories}
+            className="text-sm text-primary underline underline-offset-4"
+          >
+            Coba lagi
+          </button>
+        </div>
       )}
 
       {!isLoading && !error && categories.length === 0 && (
-        <p className="text-muted-foreground text-sm">
-          Belum ada kategori. Klik "Tambah Kategori" untuk membuat yang pertama.
-        </p>
+        <EmptyState
+          icon="🏷️"
+          title="Belum ada kategori"
+          description="Buat kategori dulu sebelum mencatat transaksi."
+          actionLabel="Tambah Kategori"
+          onAction={openCreateForm}
+        />
       )}
 
       {!isLoading && !error && categories.length > 0 && (
