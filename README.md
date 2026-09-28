@@ -162,7 +162,7 @@ cd frontend && npm test
 ## 👨‍💻 Author
 
 **Gadang Khalis**  
-Fullstack Developer (Self-taught) · Pasuruan, Indonesia  
+Fullstack Developer (Self-taught) · Indonesia  
 [GitHub](https://github.com/gadangKhalis)
 
 ---
